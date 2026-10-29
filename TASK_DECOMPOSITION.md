@@ -25,7 +25,7 @@ competing demand. It ships an AI failure audit with at least 3 documented flaws.
 
 - [x] Task 3.0: Write `project-rules.md` and `TASK_DECOMPOSITION.md`
 - [x] Task 3.1: Import engine from Homework 2
-- [ ] Task 3.2: Define flash sale contracts
+- [x] Task 3.2: Define flash sale contracts
 - [ ] Task 3.3: Server clock sync + zero-drift countdown
 - [ ] Task 3.4: Sale phase machine
 - [ ] Task 3.5: Lock-based inventory server
