@@ -34,4 +34,4 @@ competing demand. It ships an AI failure audit with at least 3 documented flaws.
 - [x] Task 3.8: Reservation hook
 - [x] Task 3.9: Storefront UI
 - [x] Task 3.10: AI failure audit
-- [ ] Task 3.11: README
+- [x] Task 3.11: README
