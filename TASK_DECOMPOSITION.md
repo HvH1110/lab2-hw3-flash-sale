@@ -29,7 +29,7 @@ competing demand. It ships an AI failure audit with at least 3 documented flaws.
 - [x] Task 3.3: Server clock sync + zero-drift countdown
 - [x] Task 3.4: Sale phase machine
 - [x] Task 3.5: Lock-based inventory server
-- [ ] Task 3.6: Competing shopper bots
+- [x] Task 3.6: Competing shopper bots
 - [ ] Task 3.7: Optimistic inventory lock FSM
 - [ ] Task 3.8: Reservation hook
 - [ ] Task 3.9: Storefront UI

@@ -66,6 +66,7 @@ export class FlashSaleServer implements FlashSaleApi {
   private readonly sleep: (ms: number) => Promise<void>;
   private readonly timers: Timers;
   private sweepTimer: unknown = null;
+  private disposed = false;
   private sequence = 0;
   private snapshot: readonly StockSnapshot[];
 
@@ -114,6 +115,7 @@ export class FlashSaleServer implements FlashSaleApi {
   }
 
   dispose(): void {
+    this.disposed = true;
     if (this.sweepTimer !== null) this.timers.clearTimeout(this.sweepTimer);
     this.sweepTimer = null;
     this.listeners.clear();
@@ -218,6 +220,8 @@ export class FlashSaleServer implements FlashSaleApi {
   private scheduleSweep(): void {
     if (this.sweepTimer !== null) this.timers.clearTimeout(this.sweepTimer);
     this.sweepTimer = null;
+    // A request that was in flight during dispose() still commits; it must not re-arm a zombie timer.
+    if (this.disposed) return;
     let earliest = Infinity;
     for (const lock of this.locks.values()) earliest = Math.min(earliest, lock.expiresAt);
     if (earliest === Infinity) return;

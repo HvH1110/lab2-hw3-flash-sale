@@ -164,3 +164,13 @@ describe('FlashSaleServer: no overselling', () => {
     expect(timers).toHaveLength(0);
   });
 });
+
+describe('FlashSaleServer: dispose', () => {
+  it('a request in flight during dispose() does not re-arm the sweep timer (no zombie timers)', async () => {
+    const { server, timers } = setup();
+    const pending = server.reserve({ productId: 'p1', quantity: 1, customerId: 'late' }); // commits after dispose
+    server.dispose();
+    expect((await pending).ok).toBe(true);
+    expect(timers).toHaveLength(0);
+  });
+});
