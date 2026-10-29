@@ -139,3 +139,38 @@ export function formatCountdown(ms: number): string {
   const clock = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(centis)}`;
   return days > 0 ? `${days}d ${clock}` : clock;
 }
+
+export interface TickerOptions {
+  readonly clock: Clock;
+  readonly onTick: (now: number) => void;
+  /** onTick fires when `now` enters a new bucket of this size. */
+  readonly resolutionMs: number;
+  readonly scheduler?: FrameScheduler | undefined;
+}
+
+/**
+ * Open-ended zero-drift ticker: every frame reads the clock and reports `now` when the visible
+ * bucket changes. Like createCountdown, it never accumulates frame durations. Returns stop().
+ */
+export function createTicker({ clock, onTick, resolutionMs, scheduler: injected }: TickerOptions): () => void {
+  const scheduler = injected ?? browserScheduler;
+  let handle: number | null = null;
+  let lastBucket = Number.NaN;
+  let stopped = false;
+  const tick = (): void => {
+    if (stopped) return;
+    const now = clock.now();
+    const bucket = Math.floor(now / resolutionMs);
+    if (bucket !== lastBucket) {
+      lastBucket = bucket;
+      onTick(now);
+    }
+    handle = scheduler.request(tick);
+  };
+  tick();
+  return () => {
+    stopped = true;
+    if (handle !== null) scheduler.cancel(handle);
+    handle = null;
+  };
+}

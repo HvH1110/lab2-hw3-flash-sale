@@ -4,6 +4,7 @@ import { FlashSaleServer } from '../src/sale/server';
 import type { CheckoutRequest, Product } from '../src/sale/types';
 import { useReservations, type Reservations } from '../src/sale/use-reservations';
 import type { VNode } from '../src/types';
+import { useState } from '../src/use-state';
 import { fakeClock } from './sale-fixtures';
 
 const products: readonly Product[] = [
@@ -26,6 +27,8 @@ function controllableNetwork() {
 let app: AppHandle | null = null;
 let r!: Reservations;
 let renders = 0;
+/** Pushes a new `now` into the probe (what the app's ticker does every frame). */
+let tick!: (now: number) => void;
 
 function mount(options: { approve?: (req: CheckoutRequest) => boolean; ttl?: number } = {}) {
   const time = fakeClock(10_000);
@@ -41,7 +44,9 @@ function mount(options: { approve?: (req: CheckoutRequest) => boolean; ttl?: num
   renders = 0;
   function Probe(): VNode {
     renders++;
-    r = useReservations({ api: server, customerId: 'me', clock: time.clock });
+    const [now, setNow] = useState(time.now);
+    tick = setNow;
+    r = useReservations({ api: server, customerId: 'me', now });
     return createElement('output', null, r.lockOf('p1').status);
   }
   app = renderApp(Probe, document.createElement('section'));
@@ -112,17 +117,28 @@ describe('useReservations', () => {
     expect(server.soldOf('p1')).toBe(1);
   });
 
-  it('the client timer expires the hold at its deadline and the unit returns to stock', async () => {
+  it('expires the hold exactly when the rendered clock reaches the deadline, and the unit returns', async () => {
     const { net, time, server } = mount({ ttl: 5_000 });
     r.reserve('p1');
     await net.deliverAll();
     time.advance(4_999);
-    await vi.advanceTimersByTimeAsync(4_999);
+    tick(time.now);
     expect(r.lockOf('p1').status).toBe('RESERVED');
     time.advance(1);
-    await vi.advanceTimersByTimeAsync(1);
+    tick(time.now);
     expect(r.lockOf('p1').status).toBe('EXPIRED');
+    await net.deliverAll(); // the client releases the expired lock instead of waiting for the server sweep
     expect(server.stock()[0]?.available).toBe(2);
+  });
+
+  it('a long-throttled tab expires the hold on the very first frame back', async () => {
+    const { net, time } = mount({ ttl: 5_000 });
+    r.reserve('p1');
+    await net.deliverAll();
+    time.advance(60_000); // tab in the background: no frames, no ticks
+    expect(r.lockOf('p1').status).toBe('RESERVED');
+    tick(time.now); // first frame after returning
+    expect(r.lockOf('p1').status).toBe('EXPIRED');
   });
 
   it('RACE: cancelling during an in-flight reservation releases the late lock instead of leaking it', async () => {

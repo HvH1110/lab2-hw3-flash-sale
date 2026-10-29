@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from '../mini-react';
 import { IDLE_LOCK, lockTransition, pendingUnits } from './lock-machine';
-import type { Clock, FlashSaleApi, LockEvent, LockState, StockSnapshot } from './types';
+import type { FlashSaleApi, LockEvent, LockState, StockSnapshot } from './types';
 
 export interface ReservationsOptions {
   readonly api: FlashSaleApi;
   readonly customerId: string;
-  /** Server-synchronised clock (lock expiries are in server time). */
-  readonly clock: Clock;
+  /**
+   * Current server-synchronised time, from the app's frame-driven ticker. Expiry is derived from the
+   * same value the UI renders, so a hold can never show 00:00 while still counting as held.
+   */
+  readonly now: number;
 }
 
 export interface Reservations {
@@ -23,7 +26,7 @@ export interface Reservations {
 
 const toMap = (stock: readonly StockSnapshot[]): ReadonlyMap<string, StockSnapshot> => new Map(stock.map((s) => [s.productId, s]));
 
-export function useReservations({ api, customerId, clock }: ReservationsOptions): Reservations {
+export function useReservations({ api, customerId, now }: ReservationsOptions): Reservations {
   const [stock, setStock] = useState<ReadonlyMap<string, StockSnapshot>>(toMap(api.stock()));
   const [locks, setLocks] = useState<ReadonlyMap<string, LockState>>(new Map());
   const requestIds = useRef(new Map<string, number>());
@@ -49,20 +52,16 @@ export function useReservations({ api, customerId, clock }: ReservationsOptions)
       return map;
     });
 
-  // Client-side expiry: one timeout per held lock, at its (server-time) deadline.
-  const deadlines = [...locks.entries()]
-    .flatMap(([productId, lock]) => (lock.status === 'RESERVED' ? [`${productId}:${lock.lockId}:${lock.expiresAt}`] : []))
-    .join('|');
+  // Client-side expiry, derived from `now` (no separate timer that could fire late in a throttled tab).
   useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    for (const [productId, lock] of latest.current) {
-      if (lock.status !== 'RESERVED') continue;
-      const { lockId } = lock;
-      const delay = Math.max(0, lock.expiresAt - clock.now());
-      timers.push(setTimeout(() => dispatch(productId, { type: 'EXPIRE', lockId, source: 'timer' }), delay));
+    for (const [productId, lock] of locks) {
+      if (lock.status === 'RESERVED' && now >= lock.expiresAt) {
+        dispatch(productId, { type: 'EXPIRE', lockId: lock.lockId, source: 'timer' });
+        // Hand the unit back now rather than waiting for the server's own sweep.
+        void api.release(lock.lockId);
+      }
     }
-    return () => timers.forEach(clearTimeout);
-  }, [deadlines]);
+  }, [now, locks]);
 
   const reserve = (productId: string): void => {
     const status = lockOf(productId).status;

@@ -1,0 +1,63 @@
+{
+  "clockOffset": "+2781 ms (±31 ms)",
+  "drift": [
+    {
+      "at": "start",
+      "ourErrorMs": 0,
+      "naiveSetIntervalErrorMs": 0
+    },
+    {
+      "at": "+1s",
+      "ourErrorMs": -15,
+      "naiveSetIntervalErrorMs": 205
+    },
+    {
+      "at": "after 700 ms long task",
+      "ourErrorMs": -8,
+      "naiveSetIntervalErrorMs": 902
+    },
+    {
+      "at": "after 3 s main-thread stall",
+      "ourErrorMs": -6,
+      "naiveSetIntervalErrorMs": 3924
+    },
+    {
+      "at": "+2s",
+      "ourErrorMs": -2,
+      "naiveSetIntervalErrorMs": 4238
+    }
+  ],
+  "pageFpsDuringCountdown": 60,
+  "longTasksDuringCountdown": 0,
+  "phaseAfterStart": "Ends in",
+  "optimistic": {
+    "before": "15 left",
+    "immediatelyAfterClick": "14 left",
+    "status": "RESERVING"
+  },
+  "afterServer": {
+    "status": "RESERVED",
+    "hold": "00:44"
+  },
+  "order": "Order DH000018 confirmed: 899.000 ₫",
+  "bots": {
+    "shoppers": "34",
+    "purchases": "14"
+  },
+  "soldLabels": [
+    "Sold 2 of 30",
+    "Sold 3 of 60",
+    "Sold 1 of 25",
+    "Sold 3 of 120",
+    "Sold 2 of 15",
+    "Sold 1 of 40",
+    "Sold 3 of 80",
+    "Sold 0 of 20"
+  ],
+  "oversold": 0,
+  "errors": [],
+  "parity": [
+    "[commit #900] audit PASS: 242 VNodes",
+    "[commit #1200] audit PASS: 242 VNodes"
+  ]
+}

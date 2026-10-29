@@ -141,3 +141,17 @@ describe('formatCountdown', () => {
     expect(formatCountdown(ms)).toBe(text);
   });
 });
+
+describe('createTicker', () => {
+  it('reports the clock whenever the bucket changes, regardless of frame timing', async () => {
+    const { createTicker } = await import('../src/sale/time');
+    const time = fakeClock(1_000);
+    const frames = manualFrames();
+    const seen: number[] = [];
+    const stop = createTicker({ clock: time.clock, scheduler: frames.scheduler, resolutionMs: 100, onTick: (now) => seen.push(now) });
+    for (const gap of [16, 16, 16, 16, 16, 16, 16, 400, 16]) { time.advance(gap); frames.frame(); }
+    expect(seen).toEqual([1_000, 1_112, 1_512]); // 1 512 enters bucket 15; the next frame (1 528) stays in it
+    stop();
+    expect(frames.pending).toBe(false);
+  });
+});
