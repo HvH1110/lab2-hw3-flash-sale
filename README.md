@@ -16,7 +16,7 @@ stock. Built on the Lab 02 Mini-React engine.
 | Lighthouse Accessibility / Best Practices | **100 / 100** ([report](docs/lighthouse/report.html)) |
 | AI failure audit | **7 real flaws** + 1 measured baseline ([AI_FAILURE_AUDIT.md](AI_FAILURE_AUDIT.md)) |
 | Tests | **240 passing** |
-| Commits | 14 atomic Conventional Commits (minimum required: 8) |
+| Commits | 14 atomic Conventional Commits incl. this fix (minimum required: 8) |
 
 ![Live sale with a held item](docs/screenshot-live.png)
 
