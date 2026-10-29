@@ -117,7 +117,8 @@ export type LockEvent =
   | { readonly type: 'CHECKOUT'; readonly idempotencyKey: string }
   | { readonly type: 'PAID'; readonly lockId: string; readonly orderId: string; readonly total: number }
   | { readonly type: 'DECLINED'; readonly lockId: string }
-  | { readonly type: 'EXPIRE'; readonly lockId: string }
+  /** `timer`: the client's own countdown reached zero. `server`: checkout answered LOCK_EXPIRED. */
+  | { readonly type: 'EXPIRE'; readonly lockId: string; readonly source: 'timer' | 'server' }
   | { readonly type: 'RELEASE' }
   | { readonly type: 'RETRY' };
 
