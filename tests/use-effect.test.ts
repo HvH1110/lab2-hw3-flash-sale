@@ -138,3 +138,19 @@ describe('useEffect: unmount', () => {
     expect(effect).not.toHaveBeenCalled();
   });
 });
+
+describe('useEffect: effects that set state', () => {
+  it('an effect that sets a new value on mount runs exactly once (deps recorded before it runs)', () => {
+    const effect = vi.fn();
+    app = renderApp(() => {
+      const [items, setItems] = useState<readonly number[]>([]);
+      useEffect(() => {
+        effect();
+        setItems([1, 2, 3]); // a *new* array every time: would loop forever if the effect re-ran
+      }, []);
+      return createElement('p', null, items.length);
+    }, root);
+    expect(effect).toHaveBeenCalledTimes(1);
+    expect(root.textContent).toBe('3');
+  });
+});

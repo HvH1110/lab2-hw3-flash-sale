@@ -135,3 +135,11 @@ describe('renderApp with reconciliation', () => {
     focus.mockRestore();
   });
 });
+
+describe('renderApp: failed first render', () => {
+  it('does not leave the engine locked as "already mounted"', () => {
+    expect(() => renderApp(() => { throw new Error('boom'); }, root)).toThrow('boom');
+    app = renderApp(Counter, root);
+    expect(root.querySelector('#count')?.textContent).toBe('0');
+  });
+});

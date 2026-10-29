@@ -47,9 +47,12 @@ export function useEffect(effect: Effect, deps?: DependencyList): void {
     generation: currentGeneration(),
     run: () => {
       record.cleanup?.();
+      record.cleanup = undefined;
+      // Record the deps *before* running: an effect that sets state renders synchronously, and that
+      // nested render must already see these deps, or it re-queues this effect forever.
+      record.deps = deps;
       const cleanup = effect();
       record.cleanup = typeof cleanup === 'function' ? cleanup : undefined;
-      record.deps = deps;
     },
   });
 }

@@ -76,7 +76,16 @@ export function renderApp(Component: RootComponent, container: Element, options:
   };
 
   setRenderer(render);
-  render();
+  try {
+    render();
+  } catch (error) {
+    // A failed first render must not leave the engine thinking an app is mounted.
+    setRenderer(() => {});
+    teardownEvents();
+    resetStateStore();
+    mounted = false;
+    throw error;
+  }
 
   return {
     rerender: render,
